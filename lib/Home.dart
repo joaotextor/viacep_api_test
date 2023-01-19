@@ -30,9 +30,10 @@ class _HomeState extends State<Home> {
     String logradouro = retorno["logradouro"];
     String cidade = retorno["localidade"];
     String bairro = retorno["bairro"];
+    String UF = retorno["uf"];
 
     setState(() {
-      resultado = "${logradouro}, ${bairro}, ${cidade}";
+      resultado = "${logradouro}, ${bairro}, ${cidade}/${UF}";
     });
   }
 
