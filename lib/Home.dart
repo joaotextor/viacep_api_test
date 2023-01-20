@@ -24,8 +24,14 @@ class _HomeState extends State<Home> {
   TextEditingController txtUf = new TextEditingController();
   TextEditingController txtCidade = new TextEditingController();
   TextEditingController txtLogradouro = new TextEditingController();
+  TextEditingController txtCep = new TextEditingController();
 
-  List resultado = [];
+  List resultadoCep = [];
+  String resultadoEndereco = '';
+  String stateLogradouro = '';
+  String stateCidade = '';
+  String stateBairro = '';
+  String stateUf = '';
 
   void updateUf(String newUf) {
     setState(() {
@@ -34,7 +40,7 @@ class _HomeState extends State<Home> {
   }
 
   _consultaCep() async {
-    resultado = [];
+    resultadoCep = [];
     String cidade = txtCidade.text;
     String logradouro = txtLogradouro.text;
     String url = "https://viacep.com.br/ws/${uf}/${cidade}/${logradouro}/json/";
@@ -46,80 +52,179 @@ class _HomeState extends State<Home> {
 
     retorno.forEach((element) {
       cep = element["cep"];
-      resultado.add(cep);
+      resultadoCep.add(cep);
     });
 
-    setState(() {});
+    setState(() {
+      txtCidade.text = '';
+      txtLogradouro.text = '';
+    });
+  }
+
+  _consultaPorCep() async {
+    String cep = txtCep.text;
+    String url = "https://viacep.com.br/ws/${cep}/json/";
+    http.Response response;
+    response = await http.get(Uri.parse(url));
+
+    Map<String, dynamic> retorno = json.decode(response.body);
+
+    String logradouro = retorno["logradouro"];
+    String cidade = retorno["localidade"];
+    String bairro = retorno["bairro"];
+    String uf = retorno["uf"];
+
+    setState(() {
+      stateLogradouro = "$logradouro";
+      stateCidade = "$cidade";
+      stateBairro = "$bairro";
+      stateUf = "$uf";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Consulta de CEP com API"),
-        backgroundColor: Colors.amber[900]
-      ),
-      body: Container(
-        padding: EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return DefaultTabController(
+      initialIndex: 0,
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Consulta de CEP com API"),
+          backgroundColor: Colors.amber[900],
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(
+                text: 'Preciso do CEP',
+              ),
+              Tab(
+                text: 'Ja tenho o CEP'
+              ),
+            ],
+          ),
+        ),
+        body: new TabBarView(
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                SizedBox(
-                  height: 75,
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: SizedBox(
-                      height: 55,
-                      child: DropdownButtonWidget(
-                        callback: (String newUf) {
-                          updateUf(newUf);
-                        }
+            Container(
+                padding: EdgeInsets.all(40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          SizedBox(
+                            height: 75,
+                            child: Align(
+                              alignment: Alignment.bottomLeft,
+                              child: SizedBox(
+                                height: 55,
+                                child: DropdownButtonWidget(
+                                    callback: (String newUf) {
+                                      updateUf(newUf);
+                                    }
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: new TextField(
+                              keyboardType: TextInputType.text,
+                              decoration: InputDecoration(
+                                labelText: "Digite a cidade",
+                              ),
+                              style: TextStyle(fontSize: 15),
+                              controller: txtCidade,
+                            ),
+                          )
+                        ]
+                    ),
+                    TextField(
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(
+                        labelText: "Digite o logradouro",
+                      ),
+                      style: TextStyle(fontSize: 15),
+                      controller: txtLogradouro,
+                    ),
+                    new Expanded(
+                      child: new ListView.builder(
+                        itemCount: resultadoCep.length,
+                        itemBuilder: (BuildContext ctxt, int Index) {
+                          return new Text(resultadoCep[Index]);
+                        },
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: new TextField(
-                    keyboardType: TextInputType.text,
-                    decoration: InputDecoration(
-                      labelText: "Digite a cidade",
+                    ElevatedButton(
+                      child: Text(
+                        "Consultar",
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      onPressed: _consultaCep,
                     ),
-                    style: TextStyle(fontSize: 15),
-                    controller: txtCidade,
-                ),
-                )
-              ]
-            ),
-            TextField(
-              keyboardType: TextInputType.text,
-              decoration: InputDecoration(
-                labelText: "Digite o logradouro",
-              ),
-              style: TextStyle(fontSize: 15),
-              controller: txtLogradouro,
-            ),
-            new Expanded(
-              child: new ListView.builder(
-                  itemCount: resultado.length,
-                  itemBuilder: (BuildContext ctxt, int Index) {
-                    return new Text(resultado[Index]);
-                  },
-              ),
-            ),
-            ElevatedButton(
-              child: Text(
-                "Consultar",
-                style: TextStyle(fontSize: 15),
-              ),
-              onPressed: _consultaCep,
-            ),
+                  ],
+                )),
+            Container(
+                padding: EdgeInsets.all(40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: "Digite o CEP. Somente números.",
+                      ),
+                      style: TextStyle(fontSize: 15),
+                      controller: txtCep,
+                    ),
+                    Text(
+                      "Logradouro",
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${stateLogradouro}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+              
+                    Text(
+                      "Bairro",
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${stateBairro}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+              
+                    Text(
+                      "Cidade",
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${stateCidade}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+              
+                    Text(
+                      "UF",
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${stateUf}",
+                      style: TextStyle(fontSize: 20),
+                    ),
+
+                    ElevatedButton(
+                      child: Text(
+                        "Consultar",
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      onPressed: _consultaPorCep,
+                    ),
+                  ],
+                )),
           ],
-        )),
+        ),
+      )
     );
   }
 }
