@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -16,25 +18,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  TextEditingController txtcep = new TextEditingController();
-  String resultado = '';
+  TextEditingController txtUf = new TextEditingController();
+  TextEditingController txtCidade = new TextEditingController();
+  TextEditingController txtLogradouro = new TextEditingController();
+  List resultado = [];
 
   _consultaCep() async {
-    String cep = txtcep.text;
-    String url = "https://viacep.com.br/ws/${cep}/json/";
+    String uf = txtUf.text;
+    String cidade = txtCidade.text;
+    String logradouro = txtLogradouro.text;
+    String url = "https://viacep.com.br/ws/${uf}/${cidade}/${logradouro}/json/";
+    String cep = '';
     http.Response response;
     response = await http.get(Uri.parse(url));
 
-    Map<String, dynamic> retorno = json.decode(response.body);
+    List<dynamic> retorno = json.decode(response.body);
 
-    String logradouro = retorno["logradouro"];
-    String cidade = retorno["localidade"];
-    String bairro = retorno["bairro"];
-    String UF = retorno["uf"];
-
-    setState(() {
-      resultado = "${logradouro}, ${bairro}, ${cidade}/${UF}";
+    retorno.forEach((element) {
+      cep = element["cep"];
+      resultado.add(cep);
     });
+
+
+    setState(() {});
   }
 
   @override
@@ -50,16 +56,36 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             TextField(
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.text,
               decoration: InputDecoration(
-                labelText: "Digite o CEP. Somente números.",
+                labelText: "Digite a UF",
               ),
               style: TextStyle(fontSize: 15),
-              controller: txtcep,
+              controller: txtUf,
             ),
-            Text(
-            "Resultado: ${resultado}",
-            style: TextStyle(fontSize: 25),
+            TextField(
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                labelText: "Digite a cidade",
+              ),
+              style: TextStyle(fontSize: 15),
+              controller: txtCidade,
+            ),
+            TextField(
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                labelText: "Digite o logradouro",
+              ),
+              style: TextStyle(fontSize: 15),
+              controller: txtLogradouro,
+            ),
+            new Expanded(
+              child: new ListView.builder(
+                  itemCount: resultado.length,
+                  itemBuilder: (BuildContext ctxt, int Index) {
+                    return new Text(resultado[Index]);
+                  },
+              ),
             ),
             ElevatedButton(
               child: Text(
