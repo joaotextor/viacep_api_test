@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'DropdownButton.dart';
+
 /*StatefulWidget is a widget that has a mutable state. 
 
 It is the responsibility of the widget implementer to ensure that the State is promptly notified when such state changes, using State.setState.
@@ -18,13 +20,21 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String uf = '';
   TextEditingController txtUf = new TextEditingController();
   TextEditingController txtCidade = new TextEditingController();
   TextEditingController txtLogradouro = new TextEditingController();
+
   List resultado = [];
 
+  void updateUf(String newUf) {
+    setState(() {
+      uf = newUf;
+    });
+  }
+
   _consultaCep() async {
-    String uf = txtUf.text;
+    resultado = [];
     String cidade = txtCidade.text;
     String logradouro = txtLogradouro.text;
     String url = "https://viacep.com.br/ws/${uf}/${cidade}/${logradouro}/json/";
@@ -39,12 +49,12 @@ class _HomeState extends State<Home> {
       resultado.add(cep);
     });
 
-
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: Text("Consulta de CEP com API"),
@@ -55,21 +65,35 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            TextField(
-              keyboardType: TextInputType.text,
-              decoration: InputDecoration(
-                labelText: "Digite a UF",
-              ),
-              style: TextStyle(fontSize: 15),
-              controller: txtUf,
-            ),
-            TextField(
-              keyboardType: TextInputType.text,
-              decoration: InputDecoration(
-                labelText: "Digite a cidade",
-              ),
-              style: TextStyle(fontSize: 15),
-              controller: txtCidade,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                SizedBox(
+                  height: 75,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: SizedBox(
+                      height: 55,
+                      child: DropdownButtonWidget(
+                        callback: (String newUf) {
+                          updateUf(newUf);
+                        }
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: new TextField(
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: "Digite a cidade",
+                    ),
+                    style: TextStyle(fontSize: 15),
+                    controller: txtCidade,
+                ),
+                )
+              ]
             ),
             TextField(
               keyboardType: TextInputType.text,
